@@ -1,4 +1,7 @@
 <!-- GFM-TOC -->
+* [修饰符](#修饰符)
+    * [const](#const)
+    * [extern](#extern)
 * [指针](#指针)
 * [面向对象](#面向对象)
 * [重写、重载、隐藏](#重写-重载-隐藏)
@@ -6,9 +9,82 @@
 * [STL](#stl)
 
 <!-- GFM-TOC -->
-## 指针
-### 野指针和悬空指针
+## 修饰符
+### const
+const只修饰离他最近的类型符号 
+在全局作用域中，const定义的变量是本文件的局部变量，只能再本文件中访问。
+```c++
+//file1
+extern const int bufsize;
+//file2，用extren可以访问另一个文件的常量。
+extern const int bufsize;
 
+typedef string *  pstring;
+const pstring cstr;
+//等价于，typedef不是简单的字符扩展，而是代表一个类型。
+string * const cstr;
+
+const int **p; int const **p; // 修饰**p代表的整型内存放的是常量。
+int * const * p;//修饰的是int *，一级指针*p是常量
+int ** const p; //修饰二级指针p本身是常量
+```
+
+## 指针
+###数组指针与指针数组
+数组指针(行指针): int (*p)[n]; ()优先级高，说明p是一个指针，指向一个一维数组，以为数组的指针步长为n,p+1表示，p要跨过n个整型数据的长度。
+```c++
+int a[3][4];
+int(*p)[4];
+p = a;//将二位数组的首地址赋给了p；
+p++;//p跨过行a[0][]指向a[1][]
+```
+指针数组: int* p[]; []优先级高，先成为一个数组，而int*则说明这是一个整型指针数组。
+```c++
+int a[3][4];
+int *p[4];
+p = a; //error, p是未可知的表示,p表示指向指针数组的常量指针
+for(int i = 0; i < 3; i++)
+    p[i] = a[i];
+```
+函数： int *p();()优先级最高，所以是个函数，返回值为int *，返回值为指针的函数。
+函数指针 int (*p)();()优先级高从左到右，所以p是一个指针，指向类型为int ()的函数。
+函数指针数组：int (*a[10]) (int); []优先级最高，所以a是一个数组，类型是个指针数组，指针指向函数为int (int);
+'''
+#include <iostream>
+#include <stdio.h>
+using namespace std;
+
+int func1(int n)
+{
+    printf("func1: %d\n", n);
+    return n;  
+}
+int func2(int n)
+{
+    printf("func2: %d\n", n);
+    return n;  
+}
+int main()
+{
+    int (*a[10])(int) = {NULL};
+    a[0] = func1;
+    a[1] = func2;
+    a[0](1);
+    a[1](2);  
+    return 0;    
+}
+'''
+
+### 野指针和悬空指针
+* 野指针——没有被初始化的指针。
+```c++
+int main()
+{
+    int *p;
+    return p & 0x07;
+}
+```
+* 悬空指针——指向的内存已经被释放了的一种指针
 ## 面向对象
 ### 重写、重载、隐藏
 - 重载(overload)：同一访问区间内声明具有不同参数列表(参数的类型、个数和顺序)的同名函数,根据参数列表确定调用。重载不关心函数的返回类型，即不能有同名同参数列表但是参数返回类型不同的函数。
