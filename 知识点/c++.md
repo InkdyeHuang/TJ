@@ -11,8 +11,9 @@
 <!-- GFM-TOC -->
 ## 修饰符
 ### const
-const只修饰离他最近的类型符号 
-在全局作用域中，const定义的变量是本文件的局部变量，只能再本文件中访问。
+const作用:定义const常量，保护被修饰的对象，防止修改，const修饰的对象存在常量存储区（符号表）只有一份拷贝，是编译期间的常量，提升了程序的效率和健壮性。
+#### const 修饰变量
+const只修饰离他最近的类型符号；在全局作用域中，const定义的变量是本文件的局部变量，只能再本文件中访问。
 ```c++
 //file1
 extern const int bufsize;
@@ -28,7 +29,45 @@ const int **p; int const **p; // 修饰**p代表的整型内存放的是常量�
 int * const * p;//修饰的是int *，一级指针*p是常量
 int ** const p; //修饰二级指针p本身是常量
 ```
+#### const修饰函数
+常成员函数，const修饰函数，只能是成员函数，而且为重载提供可能,但是常量成员函数只有权读取外部数据内容，无权修改。
 
+作用：当函数体较大且复杂时，如果希望系统帮助避免修改对象内容，那么可以将这个函数定义为常量型函数
+```c++
+class A
+{
+    const int nValue;//const 修饰类成员变量，只能在初始化表中赋值或者直接赋值。
+    const int nValue = 1;
+    A(int x):nValue(x){};
+    void f(int i){...}
+    void f(int i) const{...} //上一个函数的重载
+    const int * fun2(){...}//调用时 const int * pValue = fun2()
+    int * const fun3(){...} //调用时 int * const pValue = fun3()
+};
+```
+### const与#define 对比
+
+1. const修饰的都带有类型（有类型检测），#define 修饰的只是个常量没有类型检测.
+2. #define 在编译预处理阶段起作用，是代码段的简单字符替换，const在编译、运行时起作用； const可以进行调试，#define不可以进行调试，因为预编译阶段就替换掉了。
+3. const定义的常量都存在常量存储区(符号表)，只有一份拷贝，而#define定义的常量内存中有多份拷贝，预处理后占用代码段空间。
+4. const 不能重复定义， #define可以通过#undef取消掉某个符号的定义，然后再重新定义。
+```
+#define N 2+4 //预处理后占用代码段区间
+int a = N/2; //简单的字符串替换 a = 4
+const float PI = 3.14；//本质上是一个float，占用数据段空间
+```
+### const_cast
+const_cast <type_id>  (expression) 将const转成非const
+```c++
+const int a = 1;
+int * p = const_cast<int *>(&a);
+*p = 2;
+cout<<*p<<" "<<a<<endl;//*p=2 , a=1;
+const int *aa = &a;
+int* pp = const_cast<int*>(aa);
+*pp = 2;
+cout<<*aa<<endl;//2
+```
 ## 指针
 ### 数组指针与指针数组
 数组指针(行指针): int (*p)[n]; ()优先级高，说明p是一个指针，指向一个一维数组，以为数组的指针步长为n,p+1表示，p要跨过n个整型数据的长度。
@@ -40,7 +79,6 @@ p++;//p跨过行a[0][]指向a[1][]
 ```
 
 指针数组: int* p[]; []优先级高，先成为一个数组，而int*则说明这是一个整型指针数组。
-
 ```c++
 int a[3][4];
 int *p[4];
