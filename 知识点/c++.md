@@ -57,7 +57,7 @@ int a = N/2; //简单的字符串替换 a = 4
 const float PI = 3.14；//本质上是一个float，占用数据段空间
 ```
 ### const_cast
-const_cast <type_id>  (expression) 将const转成非const
+强制类型转化:const_cast <type_id>  (expression) 将const转成非const
 ```c++
 const int a = 1;
 int * p = const_cast<int *>(&a);
@@ -68,6 +68,13 @@ int* pp = const_cast<int*>(aa);
 *pp = 2;
 cout<<*aa<<endl;//2
 ```
+
+### extern
+作用声明外部变量或者函数，可以声明多次。
+全局变量可以用extren声明，局部变量不能用extern修饰，且局部变量运行时才在栈里分配内存。
+
+
+
 ## 指针
 ### 数组指针与指针数组
 数组指针(行指针): int (*p)[n]; ()优先级高，说明p是一个指针，指向一个一维数组，以为数组的指针步长为n,p+1表示，p要跨过n个整型数据的长度。
@@ -89,7 +96,7 @@ for(int i = 0; i < 3; i++)
 
 函数： int *p();()优先级最高，所以是个函数，返回值为int *，返回值为指针的函数。
 
-函数指针 int (*p)();()优先级高从左到右，所以p是一个指针，指向类型为int ()的函数。
+函数指针： int (*p)();()优先级高从左到右，所以p是一个指针，指向类型为int ()的函数。
 
 函数指针数组：int (*a[10]) (int); []优先级最高，所以a是一个数组，类型是个指针数组，指针指向函数为int (int);
 
