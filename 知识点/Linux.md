@@ -2,6 +2,8 @@
 * [cmake和makefile](#cmake和makefile)
 * [cmake的执行过程](#cmake的执行过程)
 * [线程池的原理及实现](#线程池的实现)
+* [Linux网络编程](#linux网络编程)
+    * [io复用](#io复用)
 * [常用指令](#常用指令)
 <!-- GFM-TOC -->
 
@@ -209,7 +211,42 @@ int main (int argc, char **argv)
         return 0;
 }
 ```
-### 常用指令
+## Linux网络编程
+### IO复用
+IO复用：Linux中的IO模型之一，IO复用就是预先告诉内核需要监视的IO条件，一旦发现进程指定的一个或多个IO条件就绪，就通过进程处理，不会在单个IO上阻塞。
+
+实现IO复用的三个接口函数：select、poll、epoll
+1. select函数
+```c
+#include<sys/select.h>
+#include<sys/time.h>
+/*nfds：被监听的最大模式符个数，通常为监听的所有描述符最大值加1。
+readdfs,writedfs,exceptfds:对应可读可写和异常等事件文件描述符集合，通过者三个参数传入文件描述符，select函数返回后，内核通过修改通知应用系统那些文件描述符就绪。fd_set结构体包含一个整形数组,容纳数量为FD_SETSIZE，所以数量有限制。
+timeout：select设置的超时时间;timeval的成员都赋值0，则select将立即返回；如果timeout为NULL，则select将一直阻塞，直到某个文件描述符就绪
+*/
+int select(int nfs, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout))
+```
+
+select缺点：
+- 每次调用select，都需要把fd集合从用户态拷贝到内核态，这个开销在fd很多时会很大
+- 每次调用select都需要在内核遍历传递进来的所有fd，这个开销在fd很多时也很大
+- select支持的文件描述符数量太小了，默认是1024
+2. poll函数：链表实现，文件描述符数量没有限制；与select类似，在一定时间内轮询一定数量的文件描述符，测试是否有就绪者。nfds参数指定被监听事件集合fds的大小，timeout指定poll的超时值，单位为毫秒，当timeout为-1时，poll调用将一直阻塞，直到某个事件发生；当timeout为0时，poll调用马上返回。
+```c
+#include <poll.h>  
+int poll(struct pollfd *fds, nfds_t nfds, int timeout);  
+```
+3. epoll系列函数
+epoll使用一组函数完成，而不是单个函数。如epoll_creat,epoll_ctl,epoll_wait;epoll把用户关心的文件描述符上的事件放在内核上的一个事件表中，从而无须像select和poll那样每次调用都要重复传入文件描述符集合事件表。但epoll需要使用一个额外的文件描述符。
+基本原理：
+epoll支持水平触发和边缘触发，最大的特点在于边缘触发，它只告诉进程哪些fd刚刚变为就绪态，并且只会通知一次。还有一个特点是，epoll使用“事件”的就绪通知方式，通过epoll_ctl注册fd，一旦该fd就绪，内核就会采用类似callback的回调机制来激活该fd，epoll_wait便可以收到通知。
+epoll的优点：
+- 没有最大并发连接的限制，能打开的FD的上限远大于1024（1G的内存上能监听约10万个端口）。
+- 效率提升，不是轮询的方式，不会随着FD数目的增加效率下降,红黑树实现。
+　　只有活跃可用的FD才会调用callback函数；即Epoll最大的优点就在于它只管你“活跃”的连接，而跟连接总数无关，因此在实际的网络环境中，Epoll的效率就会远远高于select和poll。
+- 内存拷贝，利用mmap()文件映射内存加速与内核空间的消息传递；即epoll使用mmap减少复制开销。
+https://www.cnblogs.com/luoxn28/p/6220372.html
+## 常用指令
 #### find指令
 find pathname -options [-print -exec -ok]
 -options: -name 按照文件名查找文件
